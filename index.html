@@ -1,0 +1,1597 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HOMA — House of Whispers</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Unbounded:wght@500;600;700;800&display=swap');
+:root{--ivory:#f4ece9;--orange:#f7a05a;--muted:#c1b6be}
+*{box-sizing:border-box}
+html{scroll-behavior:auto}
+body{margin:0;background:#070912;color:var(--ivory);font-family:Manrope,sans-serif;overflow-x:hidden}
+button{font:inherit;cursor:pointer}
+#world{position:fixed;inset:0;z-index:0}
+#world canvas{display:block;width:100%;height:100%}
+.vignette,.film-grain,.fade-left{position:fixed;inset:0;pointer-events:none;z-index:1}
+.vignette{background:radial-gradient(ellipse at 53% 46%,transparent 30%,rgba(1,2,8,.26) 70%,rgba(1,2,7,.72) 100%)}
+.fade-left{background:linear-gradient(90deg,rgba(4,5,12,.74),transparent 61%);opacity:1;transition:opacity .4s}
+.film-grain{opacity:.065;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.72' numOctaves='3' seed='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='.4'/%3E%3C/svg%3E")}
+.header{position:fixed;z-index:5;top:0;left:0;right:0;padding:32px max(4.5vw,22px);display:flex;align-items:center;justify-content:space-between;gap:16px}
+.logo{font:700 14px Unbounded,sans-serif;letter-spacing:-.04em}
+.logo span{color:var(--orange)}
+.nav{display:flex;align-items:center;gap:22px;color:#f3e5e8;font-size:11px;letter-spacing:.18em;text-transform:uppercase}
+.nav button{color:inherit;background:transparent;border:1px solid #e8d4dc54;padding:11px 16px;border-radius:99px;transition:background .2s}
+.nav button:hover{background:#ffffff20}
+.line{display:inline-block;background:var(--orange);width:20px;height:1px;vertical-align:middle;margin-right:10px}
+.title-area{position:fixed;z-index:4;left:max(7vw,28px);top:50%;transform:translateY(-42%);max-width:700px;pointer-events:none;transition:opacity .45s,transform .45s}
+.title-area.hidden{opacity:0;transform:translateY(-30%)}
+.kicker{color:#ffc38d;letter-spacing:.25em;font-size:11px;font-weight:800;text-transform:uppercase}
+h1{font:700 clamp(50px,7.4vw,112px)/.97 Unbounded,sans-serif;letter-spacing:-.085em;margin:29px 0 27px;text-shadow:0 12px 45px #08030c9a}
+h1 span{display:block;color:var(--orange)}
+.intro{font-size:15px;color:#e4d7de;line-height:1.8;max-width:390px;text-shadow:0 3px 18px #000}
+.start{margin-top:26px;border:1px solid #f7b27e;background:var(--orange);color:#1d0e10;border-radius:99px;padding:18px 27px;font-size:13px;font-weight:800;pointer-events:auto;transition:transform .2s}
+.start:hover{transform:translateY(-3px)}
+.chapter{position:fixed;z-index:3;bottom:9vh;left:max(7vw,28px);transition:opacity .35s;pointer-events:none}
+.chapter .number{color:#ffbd8f;font-size:11px;letter-spacing:.23em;font-weight:800}
+.chapter h2{font:600 clamp(24px,3.3vw,47px) Unbounded,sans-serif;letter-spacing:-.06em;margin:13px 0 12px}
+.chapter p{margin:0;max-width:440px;color:#ded2db;font-size:13px;line-height:1.7}
+.chapter.hide{opacity:0}
+.progress{position:fixed;z-index:4;right:max(4.5vw,22px);top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:14px;writing-mode:vertical-rl;font-size:10px;letter-spacing:.19em;color:#ded2d9}
+.track{height:130px;width:2px;background:#ffffff4a;position:relative}
+.fill{position:absolute;top:0;left:0;width:100%;height:0;background:var(--orange);box-shadow:0 0 14px var(--orange)}
+.bottom{position:fixed;z-index:4;bottom:26px;right:max(4.5vw,22px);font-size:10px;letter-spacing:.15em;color:#d4c6d0;text-align:right;text-transform:uppercase}
+#scroll-space{height:680vh;position:relative;z-index:-1;pointer-events:none}
+@media(max-width:760px){.header{padding:22px}.logo{font-size:11px}.nav{gap:8px}.nav button{padding:10px 12px;font-size:10px}.title-area{left:22px;right:20px;top:auto;bottom:16vh;transform:none}.title-area.hidden{transform:translateY(30px)}h1{font-size:clamp(43px,12vw,69px);margin:20px 0}.intro{font-size:13px;max-width:330px}.start{padding:15px 20px}.chapter{left:22px;bottom:15vh;right:35px}.chapter h2{font-size:25px}.progress{right:15px}.track{height:80px}.bottom{bottom:16px;right:22px;font-size:9px}.fade-left{background:linear-gradient(0deg,#05050c8c,transparent 75%)}}
+@media(prefers-reduced-motion:reduce){.title-area,.chapter,.fade-left,.start{transition:none}}
+</style>
+</head>
+<body>
+<div id="world" aria-label="Трёхмерный мир: проклятый особняк, лес и ведьмина комната"></div>
+<div class="vignette"></div><div class="film-grain"></div><div class="fade-left" id="fade"></div>
+<header class="header">
+  <div class="logo">HOMA <span>— HOUSE OF WHISPERS</span></div>
+  <div class="nav"><span>31.10 / THE NIGHT IS ALIVE</span><button id="restart">↺ Заново</button></div>
+</header>
+<div class="title-area" id="titleArea">
+  <div class="kicker"><i class="line"></i> AN IMMERSIVE HALLOWEEN STORY</div>
+  <h1>ДОМ<br><span>ШЕПЧЕТ.</span></h1>
+  <div class="intro">Глубоко в лесу стоит особняк, в котором никто не живёт. Но каждую ночь кто-то зажигает свечи. Следуй за огнями.</div>
+  <button class="start" id="start">Войти в историю <span aria-hidden="true">↗</span></button>
+</div>
+<div class="chapter hide" id="chapter">
+  <div class="number" id="chapterNo">01 / 04</div>
+  <h2 id="chapterTitle">Тропа забытых</h2>
+  <p id="chapterText">Светящиеся тыквы указывают дорогу.</p>
+</div>
+<div class="progress">SCROLL TO EXPLORE <div class="track"><div class="fill" id="fill"></div></div></div>
+<div class="bottom">НАВЕДИ КУРСОР · ЛИСТАЙ ВНИЗ ↓</div>
+<div id="scroll-space"></div>
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js';
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#080914');
+scene.fog = new THREE.FogExp2(0x090c15, .019);
+const camera = new THREE.PerspectiveCamera(innerWidth<760?65:57, innerWidth / innerHeight, .1, 240);
+const renderer = new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(devicePixelRatio, 1.8));
+renderer.setSize(innerWidth,innerHeight);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.52;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.getElementById('world').append(renderer.domElement);
+const clock = new THREE.Clock();
+const reduced = matchMedia('(prefers-reduced-motion:reduce)').matches;
+
+const M = (color,extra={}) => new THREE.MeshStandardMaterial({color,roughness:.88,metalness:.03,...extra});
+const dark = M(0x110f19), wood = M(0x2b1b25), trim = M(0x51414c);
+const orange = M(0xef691f), ivy = M(0x171d1b), stone = M(0x413b45);
+const candleGlow = new THREE.MeshBasicMaterial({color:0xffbb65});
+const glass = M(0xf4a348,{emissive:0xff7329,emissiveIntensity:1.8});
+const green = M(0x6ae965,{emissive:0x52ff50,emissiveIntensity:2.8});
+const root = new THREE.Group(); scene.add(root);
+function shape(parent,geo,mat,x=0,y=0,z=0){let o=new THREE.Mesh(geo,mat);o.position.set(x,y,z);parent.add(o);return o;}
+function box(parent,w,h,d,mat,x=0,y=0,z=0){return shape(parent,new THREE.BoxGeometry(w,h,d),mat,x,y,z);}
+function ball(parent,r,mat,x=0,y=0,z=0){return shape(parent,new THREE.SphereGeometry(r,16,12),mat,x,y,z);}
+function cyl(parent,a,b,h,mat,x=0,y=0,z=0){return shape(parent,new THREE.CylinderGeometry(a,b,h,10),mat,x,y,z);}
+function light(parent,color,power,range,x,y,z){let l=new THREE.PointLight(color,power,range,2);l.position.set(x,y,z);parent.add(l);return l;}
+
+scene.add(new THREE.HemisphereLight(0x9e91c2,0x0a0810,1.1));
+const moonLamp=new THREE.DirectionalLight(0xaab9e9,2.25);
+moonLamp.position.set(-15,26,15);moonLamp.castShadow=true;
+moonLamp.shadow.mapSize.set(1024,1024);
+moonLamp.shadow.camera.left=-32;moonLamp.shadow.camera.right=32;
+moonLamp.shadow.camera.top=35;moonLamp.shadow.camera.bottom=-35;
+scene.add(moonLamp);
+const doorLight=light(scene,0xff9b55,27,20,0,3.2,-15);
+const hallLight=light(scene,0xe6a66c,24,28,0,4.7,-28);
+const brewLight=light(scene,0x69ff77,38,21,0,2.5,-46);
+const violetLight=light(scene,0x9b70ff,18,23,-6,5,-46);
+
+// Земля и непрерывная дорожка к дому.
+const ground=shape(root,new THREE.PlaneGeometry(260,260),M(0x151821),0,-.06,0);
+ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;
+const path=shape(root,new THREE.PlaneGeometry(4.9,66),M(0x2b242c),0,-.045,14);
+path.rotation.x=-Math.PI/2;
+
+// Текстура с кирпичной кладкой генерируется в браузере — без внешних картинок.
+function bricks(){
+  const c=document.createElement('canvas');c.width=c.height=256;
+  const ctx=c.getContext('2d');ctx.fillStyle='#3c333e';ctx.fillRect(0,0,256,256);
+  for(let row=0;row<8;row++)for(let col=-1;col<5;col++){
+    let x=col*68+(row%2)*34,y=row*32;
+    ctx.fillStyle=`rgb(${50+((row*7+col*5+15)%14)},${43+((col*3+row*4+30)%12)},${54+((row*2+col*7+50)%15)})`;
+    ctx.fillRect(x+2,y+2,64,28);
+    ctx.fillStyle='#ffffff08';ctx.fillRect(x+2,y+2,62,1);
+  }
+  const tex=new THREE.CanvasTexture(c);tex.wrapS=tex.wrapT=THREE.RepeatWrapping;
+  tex.repeat.set(2,2);tex.colorSpace=THREE.SRGBColorSpace;
+  return M(0xffffff,{map:tex});
+}
+const brick=bricks();
+
+// Луна, мягкое свечение и небольшие облака тумана.
+ball(root,3.1,new THREE.MeshBasicMaterial({color:0xffe9c7}),14,17,-65);
+const stars=[];
+for(let i=0;i<650;i++)stars.push((Math.random()-.5)*160,Math.random()*38+7,-Math.random()*105);
+const starg=new THREE.BufferGeometry();starg.setAttribute('position',new THREE.Float32BufferAttribute(stars,3));
+root.add(new THREE.Points(starg,new THREE.PointsMaterial({color:0xcfc6e5,size:.11})));
+function softTexture(){
+  const c=document.createElement('canvas');c.width=c.height=128;
+  const g=c.getContext('2d');const grad=g.createRadialGradient(64,64,0,64,64,64);
+  grad.addColorStop(0,'rgba(225,213,255,.55)');grad.addColorStop(.38,'rgba(189,172,220,.2)');grad.addColorStop(1,'rgba(160,140,190,0)');
+  g.fillStyle=grad;g.fillRect(0,0,128,128);return new THREE.CanvasTexture(c);
+}
+const fogTex=softTexture(),wisps=[];
+for(let i=0;i<25;i++){
+  const f=new THREE.Sprite(new THREE.SpriteMaterial({map:fogTex,transparent:true,depthWrite:false,opacity:.32,color:0xb6a0cc}));
+  f.position.set((Math.random()-.5)*22,.75+Math.random()*1.8,36-Math.random()*78);
+  f.scale.set(12+Math.random()*12,3+Math.random()*3,1);root.add(f);wisps.push(f);
+}
+
+// Кривые деревья — трёхмерные стволы и разветвления.
+const trees=[];
+function tree(x,z,s){
+  const g=new THREE.Group();g.position.set(x,0,z);g.scale.setScalar(s);root.add(g);
+  const trunk=cyl(g,.23,.48,7,ivy,0,3.3,0);trunk.rotation.z=(x>0?-.14:.15);
+  for(let j=0;j<5;j++){
+    const angle=j*1.23,xp=Math.cos(angle),zp=Math.sin(angle),h=3.2+j*.5;
+    const branch=cyl(g,.035,.16,2.6-j*.2,ivy,xp*(.8+j*.06),h,zp*.55);
+    branch.rotation.z=xp*.9;branch.rotation.x=zp*.65;
+    const twig=cyl(g,.02,.07,1.25,ivy,xp*(1.55+j*.07),h+.9,zp);
+    twig.rotation.z=-xp*.7;
+  }
+  trees.push(g);
+}
+for(let i=0;i<34;i++){
+  const x=(i%2?-1:1)*(6+Math.random()*10);
+  const z=34-Math.random()*63;
+  tree(x,z,.7+Math.random()*.75);
+}
+
+// Тыквы с отдельной передней панелью: лицо больше не "съезжает".
+const pumpkins=[];
+function pumpkin(x,z,s=1){
+  const g=new THREE.Group();
+  g.position.set(x,s*.47,z);
+  g.scale.setScalar(s);
+  root.add(g);
+
+  const body=new THREE.Group();
+  g.add(body);
+
+  const ribMat=M(0xd5641b,{emissive:0x6a2300,emissiveIntensity:.15});
+
+  for(let k=0;k<10;k++){
+    const a=k*Math.PI/5;
+    const rib=ball(body,1,ribMat,Math.sin(a)*.24,0,Math.cos(a)*.24);
+    rib.scale.set(.32,.46,.45);
+    rib.castShadow=true;
+  }
+
+  const stem=cyl(g,.065,.1,.4,M(0x33432a),0,.52,0);
+  stem.rotation.z=.18;
+  stem.castShadow=true;
+
+  // Тёмная врезка под лицо
+  const inset=shape(g,new THREE.CircleGeometry(.565,32),M(0x090505),0,-.01,.605);
+  inset.scale.set(1,.91,1);
+
+  // Передняя маска — именно к ней крепится лицо
+  const facePanel=shape(g,new THREE.CircleGeometry(.54,32),M(0x1a100c),0,-.01,.62);
+  facePanel.scale.set(1,.9,1);
+
+  const faceGlow=new THREE.MeshBasicMaterial({
+    color:0xffdc83,
+    side:THREE.DoubleSide
+  });
+
+  function carve(points,x=0,y=0,z=.018,sx=1,sy=1){
+    const path=new THREE.Shape();
+    path.moveTo(...points[0]);
+    points.slice(1).forEach(p=>path.lineTo(...p));
+    path.closePath();
+    const m=shape(facePanel,new THREE.ShapeGeometry(path),faceGlow,x,y,z);
+    m.scale.set(sx,sy,1);
+    return m;
+  }
+
+  carve([[-.29,.18],[-.11,.31],[-.13,.05]]);
+  carve([[.29,.18],[.11,.31],[.13,.05]]);
+  carve([[-.31,-.17],[-.12,-.31],[0,-.22],[.12,-.31],[.31,-.17],[.19,-.39],[-.19,-.39]]);
+
+  g.userData={
+    baseY:g.position.y,
+    phase:Math.random()*6.28,
+    facePanel
+  };
+
+  pumpkins.push(g);
+}
+
+for(let i=0;i<22;i++){
+  const side=i%2?-1:1;
+  const z=31-i*2.1;
+  pumpkin(side*(3.1+(i%3)*.5),z,.75+Math.random()*.55);
+}
+
+// ОСОБНЯК: фасад действительно имеет проём шириной 3 метра.
+const mansion=new THREE.Group();mansion.position.z=-22;root.add(mansion);
+// Левый и правый участки стены — центр пустой, дверь не маскирует стену.
+box(mansion,4,7.5,.75,brick,-3.5,3.75,6);
+box(mansion,4,7.5,.75,brick,3.5,3.75,6);
+box(mansion,3,4,.75,brick,0,5.5,6); // перемычка над проходом: низ на высоте 3.5
+// Продольные стены и боковые объёмы.
+for(let sign of [-1,1]){
+  box(mansion,.6,7.5,11,brick,sign*5.5,3.75,.6);
+  box(mansion,4.4,6.2,8,brick,sign*7.7,3.1,.3);
+  box(mansion,4.7,.3,8.8,dark,sign*7.7,6.4,.3);
+  const tower=box(mansion,3,9,3.2,brick,sign*8.5,4.5,3);
+  box(mansion,3.4,.23,3.6,trim,sign*8.5,9.05,3);
+  const cone=shape(mansion,new THREE.ConeGeometry(2.55,3.8,4),dark,sign*8.5,11.05,3);
+  cone.rotation.y=Math.PI/4;
+  // Пилястры и выступающие карнизы.
+  for(let x of [sign*5.9,sign*9.4])box(mansion,.22,6.2,.3,trim,x,3.1,4.37);
+}
+box(mansion,11.4,.3,10.9,trim,0,7.53,.6);
+// Двускатная крыша и фронтон.
+for(let sign of [-1,1]){
+  const roof=box(mansion,6.4,.38,12,dark,sign*2.7,8.9,.6);
+  roof.rotation.z=sign*.39;
+}
+const gable=new THREE.Shape();gable.moveTo(-5.45,7.55);gable.lineTo(0,10.3);gable.lineTo(5.45,7.55);gable.closePath();
+shape(mansion,new THREE.ShapeGeometry(gable),brick,0,0,6.42);
+// Угловые колонны, бордюры и оконные ниши.
+for(let x of [-5.35,-1.55,1.55,5.35]){
+  box(mansion,.25,7.6,.38,trim,x,3.8,6.43);
+  box(mansion,.45,.3,.5,stone,x,7.55,6.43);
+}
+box(mansion,11.4,.22,.46,trim,0,3.8,6.5);
+function windowFrame(parent,x,y,z,w=1.35,h=1.65){
+  box(parent,w+.28,h+.32,.15,dark,x,y,z);
+  box(parent,w,h,.18,glass,x,y,z+.1);
+  box(parent,.13,h,.22,wood,x,y,z+.23);
+  box(parent,w,.13,.22,wood,x,y,z+.23);
+  box(parent,w+.5,.2,.48,stone,x,y-h/2-.15,z+.28);
+  // Полупрозрачное свечение перед стеклом.
+  const glow=shape(parent,new THREE.PlaneGeometry(w*1.3,h*1.3),new THREE.MeshBasicMaterial({color:0xffa55e,transparent:true,opacity:.13,depthWrite:false}),x,y,z+.36);
+  glow.userData.isWindowGlow=true;
+}
+for(let x of [-3.35,3.35])for(let y of [2,5.45])windowFrame(mansion,x,y,6.47);
+for(let x of [-8.5,8.5])windowFrame(mansion,x,5.1,4.7,1.2,1.7);
+const attic=ball(mansion,.72,glass,0,8.15,6.49);attic.scale.z=.15;
+shape(mansion,new THREE.TorusGeometry(.77,.17,10,32),dark,0,8.15,6.56);
+// Настоящая открывающаяся дверь: вращение вокруг боковой петли.
+const pivot=new THREE.Group();pivot.position.set(-1.38,0,6.51);mansion.add(pivot);
+const door=box(pivot,2.75,3.4,.17,wood,1.375,1.7,0);
+for(let y of [.75,1.9,2.9])box(pivot,2.25,.08,.2,trim,1.375,y,.1);
+for(let x of [.48,2.27])box(pivot,.08,2.8,.2,trim,x,1.7,.1);
+ball(pivot,.09,M(0xe6aa5c,{metalness:.7}),2.35,1.55,.19);
+// Рама обрамляет отверстие, но не закрывает его.
+for(let x of [-1.53,1.53])box(mansion,.3,3.85,.65,stone,x,1.92,6.57);
+box(mansion,3.4,.38,.68,stone,0,3.72,6.57);
+for(let i=0;i<4;i++)box(mansion,4.4-i*.43,.19,1,stone,0,.03+i*.16,8.1-i*.54);
+const porchLights=[];
+for(let x of [-2.35,2.35]){
+  const post=box(mansion,.14,2,.14,dark,x,1,8.3);
+  box(mansion,.47,.6,.47,trim,x,2.2,8.3);
+  ball(mansion,.19,candleGlow,x,2.25,8.3);
+  porchLights.push(light(mansion,0xff9f52,6,9,x,2.25,8.3));
+}
+
+// Коридор начинается прямо за дверью, без телепорта и скрытой стены.
+const hall=new THREE.Group();root.add(hall);
+const floorTiles=document.createElement('canvas');floorTiles.width=floorTiles.height=256;
+const tx=floorTiles.getContext('2d');
+for(let row=0;row<8;row++)for(let col=0;col<8;col++){
+  tx.fillStyle=(row+col)%2?'#28212b':'#5a4e56';tx.fillRect(col*32,row*32,32,32);
+}
+const tileTex=new THREE.CanvasTexture(floorTiles);tileTex.wrapS=tileTex.wrapT=THREE.RepeatWrapping;tileTex.repeat.set(2,6);tileTex.colorSpace=THREE.SRGBColorSpace;
+const tileMat=M(0xffffff,{map:tileTex,roughness:.35,metalness:.12});
+const hallFloor=shape(hall,new THREE.PlaneGeometry(10.5,25),tileMat,0,-.016,-28.1);
+hallFloor.rotation.x=-Math.PI/2;hallFloor.receiveShadow=true;
+for(let side of [-1,1]){
+  box(hall,.35,7.4,25,brick,side*5.3,3.7,-28.1);
+  box(hall,.65,.45,25,trim,side*5.23,7.2,-28.1);
+  for(let i=0;i<7;i++){
+    const z=-17.4-i*3.55;
+    box(hall,.37,6.9,.32,trim,side*5.02,3.5,z);
+    const frame=box(hall,.22,2.5,1.6,M(0x543346),side*5,3.9,z-1.65);
+    frame.rotation.y=0;
+    // Светильники вдоль коридора.
+    ball(hall,.1,candleGlow,side*4.8,4.1,z);
+  }
+}
+box(hall,10.6,.25,25,dark,0,7.4,-28.1);
+// Портал из коридора в ведьмин зал, также имеет свободный центр.
+for(let s of [-1,1])box(hall,3.7,7.4,.65,brick,s*3.4,3.7,-40.65);
+box(hall,3.1,3.35,.65,brick,0,5.73,-40.65);
+for(let x of [-1.6,1.6])box(hall,.28,4.1,.8,trim,x,2.05,-40.2);
+box(hall,3.5,.32,.85,trim,0,4.12,-40.2);
+const chandeliers=[];
+function chandelier(z){
+  const c=new THREE.Group();c.position.set(0,6.1,z);hall.add(c);
+  cyl(c,.035,.035,1.6,trim,0,.82,0);
+  const ring=shape(c,new THREE.TorusGeometry(.95,.07,8,24),trim,0,0,0);ring.rotation.x=Math.PI/2;
+  for(let k=0;k<8;k++){
+    let a=k*Math.PI/4,x=Math.sin(a)*.95,z=Math.cos(a)*.95;
+    cyl(c,.07,.07,.39,M(0xd9c1a6),x,.19,z);
+    ball(c,.09,candleGlow,x,.46,z);
+  }
+  light(c,0xffb777,5.5,10,0,.25,0);
+  chandeliers.push(c);
+}
+for(let z of [-20,-27,-34])chandelier(z);
+
+// Ведьмин зал: цельная комната в конце коридора.
+const chamber=new THREE.Group();chamber.position.z=-47;root.add(chamber);
+const chamberFloor=shape(chamber,new THREE.PlaneGeometry(15,15),M(0x30252b,{roughness:.52}),0,-.015,0);
+chamberFloor.rotation.x=-Math.PI/2;
+for(let s of [-1,1]){
+  box(chamber,.6,8,15,brick,s*7.4,4,0);
+  for(let z of [-5,0,5])box(chamber,.35,7.7,.5,trim,s*7,3.85,z);
+}
+box(chamber,15,8,.7,brick,0,4,-7.3);
+box(chamber,15,.4,15,dark,0,8.2,0);
+for(let s of [-1,1]){
+  box(chamber,3,7.5,.7,brick,s*5.9,3.75,7.2);
+  box(chamber,.36,6.4,.4,trim,s*3.9,3.2,6.9);
+}
+const magicSigil=shape(chamber,new THREE.RingGeometry(2.9,2.96,64),new THREE.MeshBasicMaterial({color:0x8dff7f,transparent:true,opacity:.4,side:THREE.DoubleSide}),0,.025,0);
+magicSigil.rotation.x=-Math.PI/2;
+const pot=shape(chamber,new THREE.SphereGeometry(1.5,32,24,0,Math.PI*2,.46,Math.PI*.7),M(0x171b1e,{metalness:.5,roughness:.45,side:THREE.DoubleSide}),0,1.25,0);pot.scale.y=.76;
+const rim=shape(chamber,new THREE.TorusGeometry(1.35,.13,12,32),stone,0,2.25,0);rim.rotation.x=Math.PI/2;
+const liquid=shape(chamber,new THREE.CircleGeometry(1.12,32),green,0,2.09,0);liquid.rotation.x=-Math.PI/2;
+for(let i=0;i<3;i++)cyl(chamber,.16,.23,.82,wood,Math.sin(i*2.09)*.72,.42,Math.cos(i*2.09)*.72);
+const bubbles=[];
+for(let i=0;i<18;i++){
+  let b=ball(chamber,.055+Math.random()*.08,new THREE.MeshBasicMaterial({color:i%2?0xb8ff96:0x66ffbe}),Math.random()*1.8-.9,2.15,Math.random()*1.8-.9);
+  b.userData={baseX:b.position.x,baseZ:b.position.z,speed:.5+Math.random(),phase:Math.random()*6.3};bubbles.push(b);
+}
+// Ведьмы с детализированными шляпами, плащами, глазами и посохами.
+const witches=[];
+function witch(x,z,s,phase){
+  const w=new THREE.Group();
+  w.position.set(x,0,z);
+  w.scale.setScalar(s);
+  chamber.add(w);
+
+  // сиреневая гамма
+  const robe=M(0x372447,{roughness:.96});
+  const robe2=M(0x5d3f78,{roughness:.96});
+  const capeMat=M(0x7b5aa6,{roughness:1});
+  const hatMat=M(0x24172f,{roughness:1});
+  const trimLilac=M(0xb08cff,{emissive:0x8f63ff,emissiveIntensity:.18});
+  const skin=M(0xc7a28e,{roughness:1});
+  const hairMat=M(0x241728,{roughness:1});
+
+  // нижняя юбка
+  const skirt=shape(w,new THREE.ConeGeometry(.8,2.18,28),robe,0,1.05,0);
+  skirt.castShadow=true;
+
+  // верх плаща
+  const upper=shape(w,new THREE.ConeGeometry(.57,1.25,20),robe2,0,1.78,.03);
+  upper.castShadow=true;
+
+  // наружный сиреневый плащ
+  const backCape=shape(w,new THREE.ConeGeometry(.68,1.9,24,1,true),capeMat,0,1.52,-.12);
+  backCape.rotation.z=.05;
+  backCape.castShadow=true;
+
+  // плечи / ворот
+  const shoulders=ball(w,.56,robe2,0,2.06,.02);
+  shoulders.scale.set(1,.44,.72);
+  shoulders.castShadow=true;
+
+  const collar=shape(w,new THREE.TorusGeometry(.28,.05,8,20),trimLilac,0,2.18,.18);
+  collar.rotation.x=Math.PI/2;
+
+  // голова
+  const head=ball(w,.25,skin,0,2.68,.07);
+  head.scale.set(.94,1.08,.88);
+  head.castShadow=true;
+
+  const chin=ball(w,.045,skin,0,2.47,.26);
+  chin.scale.set(1,.9,.8);
+
+  const nose=shape(w,new THREE.ConeGeometry(.045,.17,10),skin,0,2.63,.34);
+  nose.rotation.x=Math.PI/2;
+
+  // волосы
+  for(const ex of [-.18,.18]){
+    const hair=cyl(w,.05,.1,.72,hairMat,ex,2.34,.03);
+    hair.rotation.z=ex<0?.14:-.14;
+  }
+
+  // глаза — сиреневые, но мягкие
+  for(const ex of [-.095,.095]){
+    ball(w,.038,new THREE.MeshBasicMaterial({color:0xd6b2ff}),ex,2.71,.27);
+  }
+
+  // шляпа
+  const brim=shape(w,new THREE.CylinderGeometry(.84,.84,.06,28),hatMat,0,2.98,0);
+  brim.castShadow=true;
+
+  const band=shape(
+    w,
+    new THREE.CylinderGeometry(.38,.42,.08,24),
+    trimLilac,
+    0,3.24,.01
+  );
+
+  const hatCone=shape(w,new THREE.ConeGeometry(.43,1.52,24),hatMat,0,3.78,0);
+  hatCone.rotation.z=.12;
+  hatCone.castShadow=true;
+
+  // рукава
+  const sleeveL=cyl(w,.085,.16,1.02,robe2,-.5,2.05,.08);
+  sleeveL.rotation.z=.84;
+
+  const sleeveR=cyl(w,.085,.16,1.18,robe2,.52,2.02,.08);
+  sleeveR.rotation.z=-.5;
+
+  // ладони
+  const handL=ball(w,.07,skin,-.74,1.67,.2);
+  const handR=ball(w,.07,skin,.84,1.58,.24);
+
+  // посох с сиреневым кристаллом
+  const staff=cyl(w,.035,.055,3.18,wood,1.03,1.66,.22);
+  staff.rotation.z=.08;
+
+  const crystal=shape(
+    w,
+    new THREE.OctahedronGeometry(.12,0),
+    new THREE.MeshBasicMaterial({color:0xcda8ff}),
+    1.18,3.05,.24
+  );
+
+  const orb=ball(
+    w,
+    .15,
+    new THREE.MeshBasicMaterial({color:0xc49bff}),
+    1.18,3.05,.24
+  );
+
+  const orbGlow=new THREE.Sprite(
+    new THREE.SpriteMaterial({
+      map:fogTex,
+      color:0xc69bff,
+      transparent:true,
+      opacity:.48,
+      depthWrite:false
+    })
+  );
+  orbGlow.position.set(1.18,3.05,.24);
+  orbGlow.scale.set(1.0,1.0,1);
+  w.add(orbGlow);
+
+  w.userData={
+    baseY:0,
+    phase,
+    baseRotY:0,
+    hatCone,
+    sleeveL,
+    sleeveR,
+    handL,
+    handR,
+    orb,
+    orbGlow
+  };
+
+  witches.push(w);
+}
+
+witch(-3.45,-1.6,1.1,1);
+witch(3.5,-1.6,1,.5);
+witch(-1.9,-5.4,.85,2.2);
+for(let s of [-1,1]){
+  for(let k=0;k<3;k++){
+    box(chamber,2.6,.15,.55,wood,s*5,2.6+k*1.35,-5.65);
+    for(let j=0;j<5;j++){
+      const c=[0x9af07e,0xd467a7,0x6c90ff][(k+j)%3];
+      cyl(chamber,.09,.11,.4+Math.random()*.3,M(c,{emissive:c,emissiveIntensity:.35}),s*5+(j-2)*.43,2.9+k*1.35,-5.6);
+    }
+  }
+}
+
+// Призраки прозрачные, слегка мерцают и парят над дорожкой и в коридоре.
+// Призраки более правдоподобные: многослойная форма, мягкое свечение, рваный низ и плавные руки.
+const ghosts=[];
+function ghost(x,y,z,s){
+  const g=new THREE.Group();
+  g.position.set(x,y,z);
+  g.scale.setScalar(s);
+  root.add(g);
+
+  const spirit=new THREE.MeshStandardMaterial({
+    color:0xe6f3ff,
+    emissive:0x8ecbff,
+    emissiveIntensity:.22,
+    transparent:true,
+    opacity:.56,
+    roughness:.28,
+    metalness:0,
+    depthWrite:false
+  });
+
+  const glow=new THREE.Sprite(
+    new THREE.SpriteMaterial({
+      map:fogTex,
+      color:0xcfe8ff,
+      transparent:true,
+      opacity:.16,
+      depthWrite:false
+    })
+  );
+  glow.position.set(0,.46,0);
+  glow.scale.set(1.35,2.1,1);
+  g.add(glow);
+
+  // голова меньше и уже
+  const head=ball(g,.25,spirit,0,.98,0);
+  head.scale.set(.88,1.08,.8);
+
+  // тело более вытянутое и тонкое
+  const torso=ball(g,.29,spirit,0,.48,0);
+  torso.scale.set(.78,1.12,.68);
+
+  const waist=ball(g,.22,spirit,0,.02,0);
+  waist.scale.set(.72,1.1,.62);
+
+  // рваный низ уже и легче
+  const tails=[];
+  for(let i=0;i<6;i++){
+    const px=-.26+i*.104;
+    const fringe=ball(g,.085+(i%2)*.012,spirit,px,-.34+Math.cos(i)*.035,0);
+    fringe.scale.set(.68,1.18,.62);
+    tails.push(fringe);
+  }
+
+  // руки тоньше
+  const armL=cyl(g,.025,.05,.62,spirit,-.23,.42,.03);
+  armL.rotation.z=.92;
+
+  const armR=cyl(g,.025,.05,.66,spirit,.23,.39,.03);
+  armR.rotation.z=-.8;
+
+  // глаза мягче
+  const eye=new THREE.MeshBasicMaterial({
+    color:0x223042,
+    transparent:true,
+    opacity:.72,
+    depthWrite:false
+  });
+
+  const eyeL=ball(g,.038,eye,-.082,1.0,.19);
+  eyeL.scale.set(.72,1.18,.35);
+
+  const eyeR=ball(g,.038,eye,.082,1.0,.19);
+  eyeR.scale.set(.72,1.18,.35);
+
+  g.userData={
+    x,y,z,
+    phase:Math.random()*6.28,
+    material:spirit,
+    glow,
+    tails,
+    armL,
+    armR
+  };
+
+  ghosts.push(g);
+}
+for(let i=0;i<8;i++){
+  ghost((Math.random()-.5)*11,1.8+Math.random()*2.6,20-i*6.4,.8+Math.random()*.4);
+}
+
+for(let i=0;i<6;i++){
+  ghost((Math.random()-.5)*6,1.7+Math.random()*2.3,-21-i*2.9,.68);
+}
+
+// Ещё 12 призраков в коридоре: по обеим сторонам, на разной высоте.
+// Центральный путь камеры остаётся свободным.
+const corridorGhostRows=[-19.5,-22.8,-26.1,-29.4,-32.7,-36.0];
+corridorGhostRows.forEach((z,index)=>{
+  for(const side of [-1,1]){
+    const x=side*(2.55+(index%3)*.39);
+    const y=2.20+((index+(side+1)/2)%3)*.34;
+    const ghostScale=.57+((index*3+(side+1)/2)%4)*.055;
+    ghost(x,y,z+(side===1?-.55:.50),ghostScale);
+  }
+});
+// Непрерывный маршрут камеры: каждый переход происходит в одной системе координат.
+const keys=[
+ {p:0,   pos:[0,3,41],     look:[0,4,-21]},
+ {p:.17,pos:[-1,2.65,18], look:[0,3.4,-22]},
+ {p:.32,pos:[0,2.25,-9],  look:[0,2.7,-23]},
+ {p:.44,pos:[0,2.18,-17.3],look:[0,2.45,-31]},
+ {p:.59,pos:[0,2.25,-29], look:[0,2.5,-40]},
+ {p:.73,pos:[0,2.2,-40.7],look:[0,2.4,-48]},
+ {p:.86,pos:[0,2.25,-42.3],look:[0,2,-48]},
+ {p:1,  pos:[2.5,2.75,-43.5],look:[0,2,-47.5]}
+];
+const v=a=>new THREE.Vector3(...a);
+const smooth=t=>t*t*(3-2*t);
+function readRoute(p){
+  let i=0;while(i<keys.length-2&&p>keys[i+1].p)i++;
+  const a=keys[i],b=keys[i+1],prev=keys[Math.max(0,i-1)],next=keys[Math.min(keys.length-1,i+2)];
+  const h=b.p-a.p,t=THREE.MathUtils.clamp((p-a.p)/h,0,1),t2=t*t,t3=t2*t;
+  // Кубическая интерполяция: камера НЕ останавливается на границах участков.
+  function hermite(key){
+    const va=v(a[key]),vb=v(b[key]);
+    const ma=v(b[key]).sub(v(prev[key])).divideScalar(b.p-prev.p);
+    const mb=v(next[key]).sub(v(a[key])).divideScalar(next.p-a.p);
+    return va.multiplyScalar(2*t3-3*t2+1)
+      .add(vb.multiplyScalar(-2*t3+3*t2))
+      .add(ma.multiplyScalar(h*(t3-2*t2+t)))
+      .add(mb.multiplyScalar(h*(t3-t2)));
+  }
+  return {pos:hermite('pos'),look:hermite('look')};
+}
+const chapters=[
+ {at:.13,no:'01 / 04',title:'Тропа забытых',text:'Следуй за огнями. В темноте кто-то наблюдает за тобой.'},
+ {at:.27,no:'02 / 04',title:'Проклятый особняк',text:'Дверь открывается заранее, словно дом приглашает войти.'},
+ {at:.385,no:'03 / 04',title:'Коридор теней',text:'В коридоре беззвучно парят призраки. Кажется, они следят за каждым твоим шагом.'},
+ {at:.695,no:'04 / 04',title:'Ведьмин час',text:'В глубине дома кипит котёл. Три ведьмы уже знают, что ты здесь.'}
+];
+let target=0,progress=0,mx=0,my=0;
+const fill=document.getElementById('fill'),title=document.getElementById('titleArea');
+const chapter=document.getElementById('chapter'),chapterTitle=document.getElementById('chapterTitle');
+const chapterText=document.getElementById('chapterText'),chapterNo=document.getElementById('chapterNo');
+function syncScroll(){const max=document.documentElement.scrollHeight-innerHeight;target=max>0?THREE.MathUtils.clamp(scrollY/max,0,1):0;}
+window.addEventListener('scroll',syncScroll,{passive:true});syncScroll();
+addEventListener('pointermove',e=>{mx=(e.clientX/innerWidth-.5)*2;my=(e.clientY/innerHeight-.5)*2;},{passive:true});
+const jump=p=>window.scrollTo({top:(document.documentElement.scrollHeight-innerHeight)*p,behavior:reduced?'auto':'smooth'});
+document.getElementById('start').addEventListener('click',()=>jump(.22));
+document.getElementById('restart').addEventListener('click',()=>jump(0));
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.fov=innerWidth<760?65:57;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);syncScroll();});
+let previousChapter=-1;
+
+/* HOMA — HALLOWEEN CHARACTER UPGRADE */
+(() => {
+  const mk = (parent, geometry, material, x=0, y=0, z=0) => {
+    const object = new THREE.Mesh(geometry, material);
+    object.position.set(x,y,z);
+    parent.add(object);
+    return object;
+  };
+
+  // =====================================
+  // 1. ТЫКВЫ — ЛИЦА НА САМОЙ ПОВЕРХНОСТИ
+  // =====================================
+
+  function createPumpkinTexture() {
+    const skin = document.createElement('canvas');
+    const glow = document.createElement('canvas');
+
+    skin.width = glow.width = 1024;
+    skin.height = glow.height = 512;
+
+    const ctx = skin.getContext('2d');
+    const lightCtx = glow.getContext('2d');
+
+    ctx.fillStyle = '#bb4b1c';
+    ctx.fillRect(0,0,1024,512);
+
+    lightCtx.fillStyle = '#000';
+    lightCtx.fillRect(0,0,1024,512);
+
+    // Неровности кожуры
+    for(let i=0;i<100;i++){
+      const x=(i*137)%1024;
+      const y=(i*73)%512;
+
+      ctx.fillStyle = i%2
+        ? 'rgba(255,183,87,.07)'
+        : 'rgba(53,21,15,.12)';
+
+      ctx.fillRect(x,y,1.5,8+(i%7)*3);
+    }
+
+    function drawFace(c, emitting=false) {
+      c.save();
+      c.translate(256,263);
+
+      const shapes=[
+        [[-85,-35],[-29,-72],[-35,2]],
+        [[85,-35],[29,-72],[35,2]],
+        [
+          [-94,35],[-66,88],[-32,68],
+          [-8,91],[19,65],[52,87],
+          [96,35],[73,106],[-70,106]
+        ]
+      ];
+
+      shapes.forEach(points=>{
+        c.beginPath();
+        c.moveTo(...points[0]);
+
+        points.slice(1).forEach(p=>c.lineTo(...p));
+        c.closePath();
+
+        if(emitting){
+          c.fillStyle='#ffca5c';
+          c.fill();
+        }else{
+          c.fillStyle='#27130b';
+          c.fill();
+          c.strokeStyle='#e98735';
+          c.lineWidth=5;
+          c.stroke();
+        }
+      });
+
+      c.restore();
+    }
+
+    drawFace(ctx);
+    drawFace(lightCtx,true);
+
+    const skinTexture=new THREE.CanvasTexture(skin);
+    const glowTexture=new THREE.CanvasTexture(glow);
+
+    skinTexture.colorSpace=THREE.SRGBColorSpace;
+    glowTexture.colorSpace=THREE.SRGBColorSpace;
+
+    return {skinTexture,glowTexture};
+  }
+
+  const pumpkinTextures=createPumpkinTexture();
+
+  const pumpkinMaterial=new THREE.MeshStandardMaterial({
+    map:pumpkinTextures.skinTexture,
+    emissiveMap:pumpkinTextures.glowTexture,
+    emissive:0xff8f32,
+    emissiveIntensity:1.45,
+    roughness:.92
+  });
+
+  // Цельная геометрия с рёбрами
+  const pumpkinGeometry=new THREE.SphereGeometry(1,64,40);
+  const vertices=pumpkinGeometry.attributes.position;
+
+  for(let i=0;i<vertices.count;i++){
+    const x=vertices.getX(i);
+    const y=vertices.getY(i);
+    const z=vertices.getZ(i);
+
+    const rib=1+.035*Math.cos(Math.atan2(x,z)*10);
+
+    vertices.setXYZ(
+      i,
+      x*.68*rib,
+      y*.48,
+      z*.65*rib
+    );
+  }
+
+  pumpkinGeometry.computeVertexNormals();
+
+  const stemMaterial=M(0x38452b);
+
+  const stemGeometry=new THREE.TubeGeometry(
+    new THREE.CatmullRomCurve3([
+      new THREE.Vector3(0,.43,0),
+      new THREE.Vector3(.02,.58,0),
+      new THREE.Vector3(.12,.71,.03),
+      new THREE.Vector3(.23,.72,.05)
+    ]),
+    12,.058,7,false
+  );
+
+  pumpkins.forEach((pumpkin,i)=>{
+    pumpkin.clear();
+
+    const shell=mk(
+      pumpkin,pumpkinGeometry,pumpkinMaterial
+    );
+
+    shell.castShadow=true;
+    shell.receiveShadow=true;
+
+    mk(pumpkin,stemGeometry,stemMaterial);
+
+    pumpkin.userData.baseY=pumpkin.position.y;
+    pumpkin.userData.phase=i*.7;
+  });
+
+  // ============================================================
+  // HOMA CHARACTERS V3 — фактурная сиреневая ткань + духи-полотна
+  // Подменяет только моделей ведьм и призраков. Тыквы не трогаем.
+  // ============================================================
+  const addMesh = (parent, geometry, material, x=0, y=0, z=0) => {
+    const m = new THREE.Mesh(geometry, material);
+    m.position.set(x,y,z);
+    parent.add(m);
+    return m;
+  };
+
+  function clothTexture(baseColor, seed=0) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 512;
+    const cx = canvas.getContext('2d');
+    cx.fillStyle = baseColor;
+    cx.fillRect(0,0,256,512);
+
+    // Тонкие продольные складки, будто это бархат и старое платье.
+    for (let x=0; x<256; x++) {
+      const wave = Math.sin(x*.115+seed)*.5 + Math.sin(x*.29+seed*3)*.28;
+      const strength = Math.floor(9 + wave*13);
+      cx.fillStyle = strength >= 9
+        ? `rgba(255,237,255,${Math.min(.13,(strength-8)/240)})`
+        : 'rgba(30,8,50,.08)';
+      cx.fillRect(x,0,1,512);
+    }
+    for(let i=0;i<3200;i++){
+      const x=(i*83+seed*47)%256;
+      const y=(i*137+seed*97)%512;
+      cx.fillStyle=i%2 ? 'rgba(255,255,255,.024)' : 'rgba(37,14,53,.035)';
+      cx.fillRect(x,y,1,1+(i%7));
+    }
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.wrapS = THREE.RepeatWrapping;
+    tex.wrapT = THREE.RepeatWrapping;
+    return tex;
+  }
+
+  // ----------------------------------
+  // ДУХИ: узкие высокие развевающиеся фигуры, без шаров-туловищ.
+  // ----------------------------------
+  function spiritMeshGeometry() {
+    const rows=38, sides=28;
+    const pos=[], uvs=[], tris=[];
+    const radii = [
+      [0,.008],[.07,.15],[.17,.245],[.27,.275],
+      [.43,.255],[.58,.235],[.75,.245],[.9,.215],[1,.12]
+    ];
+    function getRadius(f){
+      for(let i=0;i<radii.length-1;i++){
+        if(f<=radii[i+1][0]){
+          const a=radii[i],b=radii[i+1];
+          const t=(f-a[0])/(b[0]-a[0]);
+          return a[1]+(b[1]-a[1])*t;
+        }
+      }
+      return .12;
+    }
+    for(let y=0;y<=rows;y++){
+      const f=y/rows;
+      for(let j=0;j<=sides;j++){
+        const a=j/sides*Math.PI*2;
+        const pleat=1+.075*Math.cos(a*9+f*4);
+        const r=getRadius(f)*pleat;
+        const hem=f>.75 ? ((f-.75)/.25)**2*(.11*Math.sin(a*7)+.07*Math.sin(a*11)) : 0;
+        const drift=f>.3 ? (f-.3)*.085 : 0;
+        pos.push(Math.sin(a)*r+drift, 1.27-2.50*f+hem, Math.cos(a)*r*.76);
+        uvs.push(.5+j/sides,1-f);
+      }
+    }
+    for(let i=0;i<rows;i++)for(let j=0;j<sides;j++){
+      const a=i*(sides+1)+j,b=a+sides+1;
+      tris.push(a,b,a+1,b,b+1,a+1);
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
+    geo.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));
+    geo.setIndex(tris);
+    geo.computeVertexNormals();
+    return geo;
+  }
+
+  // Лицо — нарисовано на том же полотне, никаких плоскостей или шаров.
+  function spiritOpacityTexture(variant=0){
+    const canvas=document.createElement('canvas');
+    canvas.width=canvas.height=1024;
+    const ctx=canvas.getContext('2d');
+
+    const fabric=ctx.createLinearGradient(0,0,0,1024);
+    fabric.addColorStop(0,'rgba(246,252,255,.995)');
+    fabric.addColorStop(.24,'rgba(231,246,255,.975)');
+    fabric.addColorStop(.58,'rgba(206,230,246,.80)');
+    fabric.addColorStop(.84,'rgba(172,210,236,.38)');
+    fabric.addColorStop(1,'rgba(150,198,232,0)');
+    ctx.fillStyle=fabric;
+    ctx.fillRect(0,0,1024,1024);
+
+    // Неровная, слегка просвечивающая ткань — лицо остаётся светлым.
+    for(let k=0;k<70;k++){
+      const x=(k*131+29)%1024;
+      ctx.fillStyle='rgba(70,117,162,'+(.015+(k%5)*.003)+')';
+      ctx.fillRect(x,0,2,960);
+    }
+
+    // Никакого тёмного овала или квадрата под лицом.
+    // Только глаза и рот, напечатанные на той же текстуре.
+    const eyeY=154+variant*2;
+    for(const sign of [-1,1]){
+      const x=512+sign*(47+variant*2);
+      ctx.save();
+      ctx.translate(x,eyeY);
+      ctx.rotate(sign*(variant===1?-.23:.16));
+      // Неровные глубокие глазницы с острыми нижними краями.
+      ctx.beginPath();
+      ctx.moveTo(-24,-14);
+      ctx.bezierCurveTo(-12,-29,9,-30,24,-13);
+      ctx.bezierCurveTo(20,1,13,18,sign*4,38+variant*4);
+      ctx.bezierCurveTo(-5,23,-24,10,-24,-14);
+      ctx.closePath();
+      ctx.fillStyle='rgba(11,20,33,.96)';
+      ctx.fill();
+      // Мягкая впадина лишь у края глазницы, не по всему лицу.
+      ctx.strokeStyle='rgba(42,74,103,.34)';
+      ctx.lineWidth=5;
+      ctx.stroke();
+      // Едва заметный мёртвый отблеск на дне чёрной глазницы.
+      ctx.beginPath();
+      ctx.ellipse(sign*2,-5,3.5,5,0,0,Math.PI*2);
+      ctx.fillStyle='rgba(193,232,251,.42)';
+      ctx.fill();
+      // Редкие надрывы вокруг глаз.
+      ctx.beginPath();
+      ctx.moveTo(-13,-20);
+      ctx.lineTo(-20,-31);
+      ctx.moveTo(13,-19);
+      ctx.lineTo(19,-27);
+      ctx.strokeStyle='rgba(41,66,90,.48)';
+      ctx.lineWidth=2.2;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // Три чуть различающихся пугающих выражения.
+    ctx.save();
+    ctx.translate(512,234);
+    if(variant===1){
+      // Искажённая зловещая ухмылка с тёмными прорехами.
+      ctx.beginPath();
+      ctx.moveTo(-31,-4);
+      ctx.quadraticCurveTo(0,7,31,-4);
+      ctx.quadraticCurveTo(17,20,0,24);
+      ctx.quadraticCurveTo(-17,20,-31,-4);
+      ctx.closePath();
+      ctx.fillStyle='rgba(12,21,34,.93)';ctx.fill();
+      ctx.strokeStyle='rgba(191,222,237,.66)';
+      ctx.lineWidth=3;
+      for(const x of [-17,-7,7,17]){
+        ctx.beginPath();ctx.moveTo(x,7);ctx.lineTo(x+2,15);ctx.stroke();
+      }
+    }else{
+      // Узкий вытянутый «немой крик» без пятна вокруг.
+      const w=variant===2?20:16;
+      const h=variant===2?48:59;
+      ctx.beginPath();
+      ctx.moveTo(0,-10);
+      ctx.bezierCurveTo(w,-8,w+7,h*.44,0,h);
+      ctx.bezierCurveTo(-w-7,h*.44,-w,-8,0,-10);
+      ctx.closePath();
+      ctx.fillStyle='rgba(10,20,34,.94)';ctx.fill();
+      ctx.beginPath();ctx.moveTo(-6,14);ctx.quadraticCurveTo(0,10,6,14);
+      ctx.strokeStyle='rgba(162,210,235,.33)';ctx.lineWidth=2;ctx.stroke();
+    }
+    ctx.restore();
+
+    const texture=new THREE.CanvasTexture(canvas);
+    texture.colorSpace=THREE.SRGBColorSpace;
+    texture.wrapS=THREE.RepeatWrapping;
+    texture.wrapT=THREE.ClampToEdgeWrapping;
+    texture.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());
+    return texture;
+  }
+
+  const spectralMaps=[0,1,2].map(spiritOpacityTexture);
+  const spectralGeometry=spiritMeshGeometry();
+  const spectralFace=new THREE.MeshBasicMaterial({
+    color:0x263a50,transparent:true,opacity:.38,depthWrite:false
+  });
+  const spectralEyes=new THREE.MeshBasicMaterial({
+    color:0xb2d9ee,transparent:true,opacity:.57,depthWrite:false
+  });
+  ghosts.forEach((spirit,i)=>{
+    const d=spirit.userData;
+    spirit.clear();
+    // сбрасываем возможный масштаб из старых патчей
+    spirit.scale.setScalar(spirit.scale.y);
+    const material=new THREE.MeshStandardMaterial({
+      color:0xe5f3ff,map:spectralMaps[i%3],
+      emissive:0x7db9dd,emissiveIntensity:.20,
+      transparent:true,opacity:.86,depthWrite:false,
+      side:THREE.FrontSide,roughness:1
+    });
+    const mantle=addMesh(spirit,spectralGeometry.clone(),material);
+    mantle.rotation.y=(i%3-1)*.09;
+
+    // Лицо уже нарисовано на CanvasTexture и изгибается с полотном.
+    // Здесь нет ни лицевых плоскостей, ни шаров, ни отдельных глаз.
+
+    const aura=new THREE.Sprite(new THREE.SpriteMaterial({
+      map:fogTex,color:0xc5e7fb,transparent:true,opacity:.09,depthWrite:false
+    }));
+    aura.position.set(0,.1,-.04);
+    aura.scale.set(.78,2.35,1);
+    spirit.add(aura);
+    const sleeves=[-1,1].map((side)=>{
+      const pivot=new THREE.Group();
+      pivot.position.set(side*.18,.50,0);
+      spirit.add(pivot);
+      const sleeve=addMesh(pivot,new THREE.ConeGeometry(.072,.58,14,1,true),material,side*.08,-.25,.005);
+      sleeve.rotation.z=side*.16;
+      return pivot;
+    });
+    Object.assign(d,{
+      material,glow:aura,armL:sleeves[0],armR:sleeves[1],
+      cloth:mantle,baseVertices:new Float32Array(mantle.geometry.attributes.position.array),
+      phase:d.phase??i
+    });
+  });
+
+  // ----------------------------------
+  // ВЕДЬМЫ: полноценные силуэты в ЛАВАНДОВЫХ / ЛИЛОВЫХ платьях.
+  // ----------------------------------
+  function sculptDress(){
+    const rows=42,sides=44,positions=[],uv=[],idx=[];
+    function rAt(y){
+      if(y<.24)return .84-(y/.24)*.065;
+      if(y<1.2)return .775-(y-.24)*.425;
+      if(y<1.50)return .367-(y-1.2)*.13;
+      if(y<1.9)return .328+(y-1.5)*.09;
+      return .364-(y-1.9)*.25;
+    }
+    for(let i=0;i<=rows;i++){
+      const f=i/rows;
+      const y=.025+f*2.16;
+      const radial=rAt(y);
+      for(let j=0;j<=sides;j++){
+        const a=(j/sides)*Math.PI*2;
+        const folds=(.018+.042*(1-f))*Math.sin(12*a+f*1.6);
+        const bottom=(1-f)**7*.046*Math.sin(7*a);
+        const r=radial+folds;
+        positions.push(Math.sin(a)*r,y+bottom,Math.cos(a)*r*.84);
+        uv.push(j/sides,f*1.5);
+      }
+    }
+    for(let i=0;i<rows;i++)for(let j=0;j<sides;j++){
+      const a=i*(sides+1)+j,b=a+sides+1;
+      idx.push(a,a+1,b,b,a+1,b+1);
+    }
+    const g=new THREE.BufferGeometry();
+    g.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
+    g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));
+    g.setIndex(idx);g.computeVertexNormals();
+    return g;
+  }
+
+  function sculptCape(){
+    const rows=18,sides=26,p=[],uv=[],idx=[];
+    for(let i=0;i<=rows;i++){
+      const f=i/rows;
+      const y=2.14-1.99*f;
+      const r=.34+f*.58;
+      for(let j=0;j<=sides;j++){
+        const a=Math.PI*.37+j/sides*Math.PI*1.26;
+        const fold=.038*Math.sin(a*9+f*2)*f;
+        const rr=r+fold;
+        p.push(Math.sin(a)*rr,y+Math.sin(a*6)*f*.07,Math.cos(a)*rr*.88-.04);
+        uv.push(j/sides,1-f);
+      }
+    }
+    for(let i=0;i<rows;i++)for(let j=0;j<sides;j++){
+      const a=i*(sides+1)+j,b=a+sides+1;
+      idx.push(a,b,a+1,b,b+1,a+1);
+    }
+    const g=new THREE.BufferGeometry();
+    g.setAttribute('position',new THREE.Float32BufferAttribute(p,3));
+    g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));
+    g.setIndex(idx);g.computeVertexNormals();
+    return g;
+  }
+
+  function bentHat(){
+    const rows=21,sides=32,p=[],uv=[],idx=[];
+    for(let i=0;i<=rows;i++){
+      const f=i/rows;
+      const y=f*1.35;
+      const radius=.40*Math.pow(1-f,.92)+.006;
+      const bend=.27*f*f;
+      for(let j=0;j<=sides;j++){
+        const a=j/sides*Math.PI*2;
+        p.push(Math.sin(a)*radius+bend,y,Math.cos(a)*radius);
+        uv.push(j/sides,f);
+      }
+    }
+    for(let i=0;i<rows;i++)for(let j=0;j<sides;j++){
+      const a=i*(sides+1)+j,b=a+sides+1;
+      idx.push(a,a+1,b,a+1,b+1,b);
+    }
+    const g=new THREE.BufferGeometry();
+    g.setAttribute('position',new THREE.Float32BufferAttribute(p,3));
+    g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));
+    g.setIndex(idx);g.computeVertexNormals();
+    return g;
+  }
+
+  const gownMesh=sculptDress(), capeMesh=sculptCape(), hatMesh=bentHat();
+  const variants=[
+    {dress:'#1d1822', cape:'#271f30', hat:'#19141f', accent:'#8f63cb'},
+    {dress:'#221a28', cape:'#2d2337', hat:'#1d1724', accent:'#b07bdf'},
+    {dress:'#18141d', cape:'#241d2d', hat:'#16121a', accent:'#7e56be'}
+  ];
+  const skinMat=M(0xb8a9ae,{roughness:.96,metalness:0,emissive:0x5e4c60,emissiveIntensity:.13});
+  const hairMat=M(0x1c1520,{roughness:1});
+  const laceMat=new THREE.MeshBasicMaterial({color:0xd8b6ff});
+  const wandMat=M(0x2b202f,{roughness:.82});
+  witches.forEach((witch,i)=>{
+    const old=witch.userData;
+    witch.clear();
+    const c=variants[i%3];
+
+    const gown=M(0xffffff,{map:clothTexture(c.dress,i+1),roughness:1,metalness:0,
+      emissive:0x1a1121,emissiveIntensity:.14,side:THREE.DoubleSide});
+    const cloak=M(0xffffff,{map:clothTexture(c.cape,i+9),roughness:1,metalness:0,
+      emissive:0x15101c,emissiveIntensity:.12,side:THREE.DoubleSide});
+    const felt=M(0xffffff,{map:clothTexture(c.hat,i+21),roughness:.97,
+      emissive:0x120d17,emissiveIntensity:.12,side:THREE.DoubleSide});
+    const accentMat=new THREE.MeshBasicMaterial({color:c.accent});
+    const templeMat=M(0x1d1721,{roughness:1});
+    const browMat=M(0x332431,{roughness:1});
+    const eyeMat=new THREE.MeshBasicMaterial({color:0x211821});
+    const eyeHighlight=new THREE.MeshBasicMaterial({color:0xf8e7e5});
+
+    const dress=addMesh(witch,gownMesh,gown);dress.castShadow=true;dress.receiveShadow=true;
+    const cape=addMesh(witch,capeMesh,cloak);cape.castShadow=true;
+
+    // Плечи и капюшон формируют нормальную шею и переход к голове.
+    const shoulderWrap=addMesh(witch,
+      new THREE.SphereGeometry(.44,30,24),
+      cloak,0,2.08,-.03
+    );
+    shoulderWrap.scale.set(1.03,.37,.82);
+    shoulderWrap.castShadow=true;
+
+    const hoodNeck=addMesh(witch,
+      new THREE.CylinderGeometry(.20,.30,.56,28,1,true),
+      cloak,0,2.24,-.02
+    );
+    hoodNeck.scale.z=.88;
+    hoodNeck.castShadow=true;
+
+    const hood=addMesh(witch,
+      new THREE.SphereGeometry(.33,36,28),
+      cloak,0,2.56,-.07
+    );
+    hood.scale.set(1.02,1.02,.90);
+    hood.castShadow=true;
+
+    // Лицо приближено к капюшону: оно больше не вылезает отдельным шаром.
+    // Детали выражения помещаем в общий узел — все сдвигаются вместе с лицом.
+    const faceGroup = new THREE.Group();
+    faceGroup.position.z = -.125;
+    witch.add(faceGroup);
+
+    const face=addMesh(faceGroup,
+      new THREE.SphereGeometry(.31,36,28),
+      skinMat,0,2.57,.23
+    );
+    face.scale.set(.93,1.10,.80);
+    face.castShadow=true;
+
+    // v13 — многослойные волосы: чёткая линия роста, объёмная масса
+    // за головой, мягкие локоны и отдельные световые прядки.
+    // Всё крепится к faceGroup, чтобы волосы не отрывались от головы.
+    const styles = [
+      {colors:['#151218','#241d29','#342838','#49374b'], length:1.02, wave:.045, part:-1},
+      {colors:['#1b1920','#2d2833','#403644','#544655'], length:.79, wave:.060, part: 1},
+      {colors:['#21171f','#322332','#483045','#5c3e58'], length:.91, wave:.055, part:-1}
+    ];
+    const hairStyle=styles[i%styles.length];
+    const hairLayer=new THREE.Group();
+    hairLayer.name='witch-hair-natural';
+    faceGroup.add(hairLayer);
+
+    const scalpMat=M(0x1c1720,{roughness:.87,metalness:0,side:THREE.DoubleSide});
+    scalpMat.color.set(hairStyle.colors[0]);
+
+    const strandsMat=new THREE.MeshStandardMaterial({
+      vertexColors:true,roughness:.79,metalness:0,
+      side:THREE.DoubleSide,depthWrite:true
+    });
+
+    // Плотные волосы на макушке повторяют геометрию головы.
+    // Нет отдельного цилиндрического «шлема» и нет волос поверх глаз.
+    const scalp=addMesh(hairLayer,
+      new THREE.SphereGeometry(.329,48,32,0,Math.PI*2,0,1.19),
+      scalpMat,0,2.57,.223
+    );
+    scalp.scale.set(.985,1.115,.94);
+    scalp.castShadow=true;
+
+    // Лента волос с объёмной полосой блика посередине и сужением кончика.
+    // Несколько полос составляют широкие пряди без «эффекта макарон».
+    function strand(points,width,toneIndex=1,parent=hairLayer){
+      const curve=new THREE.CatmullRomCurve3(points,false,'catmullrom',.5);
+      const positions=[],colors=[],uvs=[],indices=[];
+      const steps=22,across=5;
+      const dark=new THREE.Color(hairStyle.colors[toneIndex%4]);
+      for(let j=0;j<=steps;j++){
+        const t=j/steps;
+        const p=curve.getPoint(t);
+        const tangent=curve.getTangent(t).normalize();
+        const normal=new THREE.Vector3(-tangent.y,tangent.x,0).normalize();
+        const thick=(.32+.68*Math.pow(Math.sin(Math.PI*t),.72))*(1-.95*Math.pow(t,8));
+        for(let k=0;k<across;k++){
+          const cross=k/(across-1)*2-1;
+          const v=width*thick*cross;
+          positions.push(
+            p.x+normal.x*v,
+            p.y+normal.y*v,
+            p.z+Math.sin(t*5+toneIndex)*.003*(1-t)+.005*(1-cross*cross)
+          );
+          // Блик не нарисован плоской полосой: разная яркость по ширине.
+          const intensity=[.68,.91,1.20,.96,.70][k]*(1-.12*t);
+          const tone=dark.clone().multiplyScalar(intensity);
+          colors.push(tone.r,tone.g,tone.b);
+          uvs.push(k/(across-1),t);
+          if(j<steps && k<across-1){
+            const a=j*across+k,b=a+across;
+            indices.push(a,b,a+1,b,b+1,a+1);
+          }
+        }
+      }
+      const geo=new THREE.BufferGeometry();
+      geo.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
+      geo.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
+      geo.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));
+      geo.setIndex(indices);
+      geo.computeVertexNormals();
+      const lock=addMesh(parent,geo,strandsMat);
+      lock.castShadow=false;
+      return lock;
+    }
+
+    // Внутренний слой: общее полотно с лёгкими складками за ушами.
+    // Благодаря ему между отдельными локонами не зияют пустоты.
+    function rearCurtain(){
+      const rows=19,segments=36,p=[],col=[],ids=[];
+      const tone=new THREE.Color(hairStyle.colors[0]);
+      for(let r=0;r<=rows;r++){
+        const t=r/rows;
+        const y=2.79-t*hairStyle.length+.014*Math.sin(t*7);
+        for(let j=0;j<=segments;j++){
+          const theta=Math.PI/2+(j/segments)*Math.PI;
+          const radius=.284+t*.148;
+          const wave=.016*t*Math.sin(theta*9+t*8);
+          p.push(
+            Math.sin(theta)*(radius+wave),
+            y+t*t*.035*Math.sin(theta*7),
+            .185+Math.cos(theta)*(radius+.09*t)+.015*Math.sin(t*11+theta*4)
+          );
+          const shade=.78+.2*(.5+.5*Math.cos(theta*9));
+          const c=tone.clone().multiplyScalar(shade);
+          col.push(c.r,c.g,c.b);
+          if(r<rows && j<segments){
+            const a=r*(segments+1)+j,b=a+segments+1;
+            ids.push(a,b,a+1,b,b+1,a+1);
+          }
+        }
+      }
+      const g=new THREE.BufferGeometry();
+      g.setAttribute('position',new THREE.Float32BufferAttribute(p,3));
+      g.setAttribute('color',new THREE.Float32BufferAttribute(col,3));
+      g.setIndex(ids);g.computeVertexNormals();
+      addMesh(hairLayer,g,strandsMat);
+    }
+    rearCurtain();
+
+    const hairMotion=[];
+    // Боковые локоны: разная длина, ширина и лёгкий естественный изгиб.
+    for(const side of [-1,1]){
+      for(let k=0;k<12;k++){
+        const q=k/11;
+        const phase=k*2.24+i*1.7;
+        const wav=hairStyle.wave;
+        const tipY=2.76-hairStyle.length*(.66+.33*q)+Math.sin(phase)*.06;
+        const xEnd=side*(.38+.13*q+Math.sin(phase)*.022);
+        const pts=[
+          new THREE.Vector3(side*(.16+.115*q),2.852-.02*q,.333),
+          new THREE.Vector3(side*(.253+.065*q),2.746,.393),
+          new THREE.Vector3(side*(.293+.050*q),2.584,.403-.017*q),
+          new THREE.Vector3(side*(.324+.11*q+wav*Math.sin(phase)),2.36,.326),
+          new THREE.Vector3(side*(.345+.105*q-wav*.8*Math.sin(phase)),2.14,.255),
+          new THREE.Vector3(xEnd,tipY,.178+.10*q)
+        ];
+        strand(pts,.023+.014*(.5+.5*Math.sin(phase)),(k+i)%4);
+      }
+
+      // Поверх тёмной массы — несколько тонких отдельных волос.
+      for(let k=0;k<8;k++){
+        const q=(k+.5)/8;
+        const y=2.73-hairStyle.length*(.67+.3*q);
+        const pts=[
+          new THREE.Vector3(side*(.204+.08*q),2.80,.351),
+          new THREE.Vector3(side*(.293+.05*q),2.60,.416),
+          new THREE.Vector3(side*(.336+.08*q),2.39,.335),
+          new THREE.Vector3(side*(.374+.11*q),y,.23)
+        ];
+        strand(pts,.0045+(k%3)*.001,(k+2)%4);
+      }
+
+      // Два свободных локона у плеч слегка качаются вместе с ведьмой.
+      for(let k=0;k<2;k++){
+        const rootPos=new THREE.Vector3(side*(.27+k*.036),2.66,.335);
+        const pivotHair=new THREE.Group();
+        pivotHair.position.copy(rootPos);
+        hairLayer.add(pivotHair);
+        const finishY=2.77-hairStyle.length*(.83+k*.18);
+        const worldPoints=[
+          rootPos,
+          new THREE.Vector3(side*(.33+k*.04),2.47,.355),
+          new THREE.Vector3(side*(.38+k*.05),2.28,.29),
+          new THREE.Vector3(side*(.41+k*.075),finishY,.18)
+        ];
+        strand(worldPoints.map(v=>v.clone().sub(rootPos)),.028+k*.006,(k+i+1)%4,pivotHair);
+        hairMotion.push({pivot:pivotHair,phase:i*1.9+k*.8+side,side});
+      }
+    }
+
+    // Косая чёлка — в 3D, с естественным пробором; не закрывает глаза.
+    for(let k=0;k<15;k++){
+      const q=k/14;
+      const side=hairStyle.part;
+      const x=side*(-.23+.46*q);
+      const tip=side*(-.14+.32*q);
+      strand([
+        new THREE.Vector3(x*.78,2.893,.331),
+        new THREE.Vector3(x*.94,2.842,.409),
+        new THREE.Vector3(tip,2.788+.014*Math.sin(k+i),.453),
+        new THREE.Vector3(tip+side*.025,2.755+.016*Math.sin(k*.9),.451)
+      ],.012+(k%4)*.002,(k+1)%4);
+    }
+    old.hairMotion=hairMotion;
+
+    // Не мультяшная улыбка, а строгий настороженный взгляд.
+    for(const sign of [-1,1]){
+      // Миндалевидные глаза без крупных белых точек.
+      const eye=addMesh(faceGroup,
+        new THREE.SphereGeometry(.030,16,12),
+        eyeMat,sign*.105,2.615,.486
+      );
+      eye.scale.set(1.14,.50,.26);
+      eye.rotation.z=sign*.16;
+
+      const paleIris=addMesh(faceGroup,
+        new THREE.SphereGeometry(.009,10,8),
+        eyeHighlight,sign*.107,2.614,.496
+      );
+      paleIris.scale.set(.60,.76,.34);
+
+      // Нахмуренные брови: внутренние концы ниже, внешние выше.
+      const browCurve=new THREE.CatmullRomCurve3([
+        new THREE.Vector3(sign*.055,2.685,.458),
+        new THREE.Vector3(sign*.110,2.703,.457),
+        new THREE.Vector3(sign*.158,2.728,.448)
+      ]);
+      addMesh(faceGroup,new THREE.TubeGeometry(browCurve,12,.011,7,false),browMat);
+
+      // Тонкая линия нижнего века.
+      const lowerLid=new THREE.CatmullRomCurve3([
+        new THREE.Vector3(sign*.078,2.591,.486),
+        new THREE.Vector3(sign*.109,2.588,.488),
+        new THREE.Vector3(sign*.133,2.596,.482)
+      ]);
+      addMesh(faceGroup,new THREE.TubeGeometry(lowerLid,8,.0035,5,false),browMat);
+    }
+
+    // Небольшой нос, не круглая пуговица.
+    const nose=addMesh(faceGroup,
+      new THREE.ConeGeometry(.022,.092,10),
+      skinMat,0,2.558,.490
+    );
+    nose.rotation.x=Math.PI/2;
+
+    // Вместо улыбки — тонкая напряжённая линия рта, уголки вниз.
+    const lips=new THREE.CatmullRomCurve3([
+      new THREE.Vector3(-.055,2.466,.482),
+      new THREE.Vector3(-.020,2.480,.497),
+      new THREE.Vector3(.010,2.484,.498),
+      new THREE.Vector3(.055,2.463,.481)
+    ]);
+    addMesh(faceGroup,new THREE.TubeGeometry(lips,16,.006,6,false),browMat);
+
+    const faceLight=new THREE.PointLight(0xd4c5dc,.85,2.1,2);
+    faceLight.position.set(0,2.66,.92);
+    witch.add(faceLight);
+
+    const belt=addMesh(witch,new THREE.TorusGeometry(.315,.026,8,32),accentMat,0,1.47,0);
+    belt.rotation.x=Math.PI/2;
+    for(let k=0;k<4;k++){
+      const lace=addMesh(witch,new THREE.BoxGeometry(.13,.013,.018),accentMat,0,1.66+k*.095,.287);
+      lace.rotation.z=(k%2?-.45:.45);
+    }
+
+    // Шляпа темная, поля меньше и выше, чтобы лицо было видно.
+    const brim=addMesh(witch,new THREE.CylinderGeometry(.66,.70,.05,48),felt,0,2.98,0);
+    brim.rotation.z=.05;
+    const hatPivot=new THREE.Group();hatPivot.position.y=3.00;witch.add(hatPivot);
+    const cone=addMesh(hatPivot,hatMesh,felt);cone.castShadow=true;
+    cone.scale.set(.86,.90,.86);
+    const band=addMesh(hatPivot,new THREE.CylinderGeometry(.36,.38,.08,32),accentMat,0,.125,0);
+    addMesh(hatPivot,new THREE.OctahedronGeometry(.045,0),accentMat,0,.12,.37);
+
+    const armPivots=[-1,1].map((sign)=>{
+      const arm=new THREE.Group();arm.position.set(sign*.34,2.01,.005);witch.add(arm);
+      const sleeve=addMesh(arm,new THREE.CylinderGeometry(.12,.25,.88,20,1,true),gown,sign*.10,-.39,.05);
+      sleeve.rotation.z=sign*.11;sleeve.castShadow=true;
+      addMesh(arm,new THREE.CylinderGeometry(.18,.19,.075,20),accentMat,sign*.16,-.82,.06);
+      const hand=addMesh(arm,new THREE.SphereGeometry(.045,12,10),skinMat,sign*.16,-.86,.061);
+      hand.scale.set(.72,1.25,.65);
+      return arm;
+    });
+
+    const staff=addMesh(armPivots[1],new THREE.CylinderGeometry(.029,.043,2.3,12),wandMat,.27,-.04,.12);
+    staff.rotation.z=-.06;
+    addMesh(armPivots[1],new THREE.OctahedronGeometry(.07,0),accentMat,.34,1.10,.12);
+
+    if(i<2){
+      const portraitLight=new THREE.PointLight(0x9e83c0,3.5,7,2);
+      portraitLight.position.set(i===0?-3.7:3.7,3.8,-.3);
+      chamber.add(portraitLight);
+    }
+
+    Object.assign(old,{
+      phase:old.phase??i,hatCone:hatPivot,
+      sleeveL:armPivots[0],sleeveR:armPivots[1]
+    });
+  });
+
+  // =====================================
+  // 4. ПЛАВНАЯ АНИМАЦИЯ БЕЗ КОНФЛИКТОВ
+  // =====================================
+})();
+
+function frame() {
+  requestAnimationFrame(frame);
+
+  const t = clock.getElapsedTime();
+  progress = THREE.MathUtils.lerp(progress, target, reduced ? 1 : 0.065);
+  const route = readRoute(progress);
+  const sway = reduced ? 0 : 1;
+
+  camera.position.copy(route.pos).add(new THREE.Vector3(
+    mx * .12 * sway,
+    Math.sin(t * 1.1) * .025 * sway - my * .08 * sway,
+    0
+  ));
+  camera.lookAt(route.look.clone().add(new THREE.Vector3(
+    mx * .13 * sway, -my * .06 * sway, 0
+  )));
+
+  // Дверь открывается ДО того, как камера пересекает порог.
+  // Начало — 20.5% маршрута, почти полностью открыта — к 32%.
+  const doorOpen = smooth(THREE.MathUtils.clamp((progress - .205) / .115, 0, 1));
+  pivot.rotation.y = THREE.MathUtils.lerp(
+    pivot.rotation.y,
+    -1.53 * doorOpen,
+    .18
+  );
+
+  hallLight.intensity = progress > .35 ? 24 : 15;
+  brewLight.intensity = progress > .65 ? 38 : 18;
+  violetLight.intensity = progress > .65 ? 18 : 9;
+  liquid.material.emissiveIntensity = 2.5 + Math.sin(t * 2.5) * .7;
+
+  wisps.forEach((wisp, i) => {
+    wisp.position.x += Math.sin(t * .12 + i) * .001 * sway;
+    wisp.material.opacity = .22 + Math.sin(t * .5 + i) * .1;
+  });
+
+  // Carved pumpkin faces are painted directly onto the surface.
+  pumpkins.forEach(pumpkin => {
+    pumpkin.position.y = pumpkin.userData.baseY;
+    pumpkin.rotation.y = 0;
+    pumpkin.rotation.z = 0;
+  });
+
+  ghosts.forEach(spirit => {
+    const d=spirit.userData;
+    spirit.position.set(
+      d.x+Math.sin(t*.43+d.phase)*.20*sway,
+      d.y+Math.sin(t*.88+d.phase)*.23*sway,
+      d.z+Math.cos(t*.31+d.phase)*.13*sway
+    );
+    spirit.rotation.z=Math.sin(t*.41+d.phase)*.024*sway;
+    spirit.rotation.y=Math.sin(t*.24+d.phase)*.07*sway;
+    d.armL.rotation.z=-.12+Math.sin(t*.66+d.phase)*.045*sway;
+    d.armR.rotation.z=.12-Math.sin(t*.70+d.phase)*.045*sway;
+    d.material.opacity=.79+Math.sin(t*.65+d.phase)*.06*sway;
+    d.glow.material.opacity=.09+Math.sin(t*.57+d.phase)*.03*sway;
+    const positions=d.cloth.geometry.attributes.position;
+    const base=d.baseVertices;
+    for(let k=0;k<positions.count;k++){
+      const n=k*3, by=base[n+1];
+      const weight=THREE.MathUtils.clamp((1.02-by)/2.1,0,1);
+      positions.setXYZ(k,
+        base[n]+Math.sin(t*1.45+by*3.2+d.phase)*.047*weight*sway,
+        by+Math.sin(t*1.15+base[n]*6+d.phase)*.024*weight*sway,
+        base[n+2]+Math.cos(t*1.20+base[n]*5+d.phase)*.035*weight*sway
+      );
+    }
+    positions.needsUpdate=true;
+  });
+
+  chandeliers.forEach((item, i) => {
+    item.rotation.z = Math.sin(t * .55 + i) * .035 * sway;
+  });
+
+  witches.forEach(witch=>{
+    const d=witch.userData;
+    witch.position.y=0;
+    witch.rotation.y=Math.sin(t*.26+d.phase)*.045*sway;
+    d.hatCone.rotation.z=Math.sin(t*.53+d.phase)*.016*sway;
+    d.sleeveL.rotation.z=.03+Math.sin(t*.75+d.phase)*.045*sway;
+    d.sleeveR.rotation.z=-.03-Math.sin(t*.63+d.phase)*.06*sway;
+    // Только свободные кончики волос чуть шевелятся в воздухе.
+    if(d.hairMotion){
+      d.hairMotion.forEach((h,n)=>{
+        h.pivot.rotation.z=Math.sin(t*.57+h.phase)*(.022+n*.001)*sway;
+        h.pivot.rotation.x=Math.cos(t*.42+h.phase)*.012*sway;
+      });
+    }
+  });
+
+  // Кипящие капли остаются исключительно в котле.
+  bubbles.forEach((b,i)=>{
+    const d=b.userData;
+    const rise=(t*d.speed*.31+d.phase)%0.46;
+    b.position.set(d.baseX*.58,2.13+rise,d.baseZ*.58);
+    b.scale.setScalar(.42);
+    b.material.transparent=true;
+    b.material.opacity=.75*(1-rise/.46);
+  });
+
+  const showIntro = progress < .09;
+  title.classList.toggle('hidden', !showIntro);
+  document.getElementById('fade').style.opacity = progress < .14 ? '1' : '.15';
+
+  let index = -1;
+  chapters.forEach((c, i) => { if (progress >= c.at) index = i; });
+  chapter.classList.toggle('hide', index < 0);
+  if (index >= 0 && index !== previousChapter) {
+    chapterTitle.textContent = chapters[index].title;
+    chapterText.textContent = chapters[index].text;
+    chapterNo.textContent = chapters[index].no;
+    previousChapter = index;
+  }
+  if (index < 0) previousChapter = -1;
+
+  fill.style.height = (progress * 100).toFixed(1) + '%';
+  renderer.render(scene, camera);
+}
+frame();
+
+</script>
+</body>
+</html>
